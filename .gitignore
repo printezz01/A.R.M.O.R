@@ -1,0 +1,37 @@
+﻿# Environment secrets
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Supabase local dev (we use hosted project, not local)
+supabase/.branches
+supabase/.temp
+
+# Firebase service account (never commit)
+firebase-service-account.json
+*-service-account.json
+
+# Node
+node_modules/
+dist/
+.next/
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+*.g.dart
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.vscode/settings.json
+.idea/
+*.iml

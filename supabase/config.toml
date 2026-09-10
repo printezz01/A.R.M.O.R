@@ -1,0 +1,25 @@
+﻿# Supabase CLI Project Configuration
+# Linked to hosted project: ampqcpxpshaiiquqbmmn.supabase.co
+# DO NOT use `supabase start` — we use the hosted project only.
+
+[project]
+id = "ampqcpxpshaiiquqbmmn"
+
+[api]
+# The hosted project REST API is available at:
+# https://ampqcpxpshaiiquqbmmn.supabase.co/rest/v1/
+
+[auth]
+# Phone OTP auth is configured in the Supabase dashboard.
+# Workers authenticate via phone number + SMS OTP.
+# No email auth required.
+site_url = "https://armor-app.example.com"
+
+[storage]
+# Storage buckets (configured via dashboard or migrations):
+# - certificates (private) — PDF certificate files
+# - avatars (public) — worker profile photos
+
+[functions]
+# Edge Functions are in backend/functions/
+# Deploy with: supabase functions deploy <name> --project-ref ampqcpxpshaiiquqbmmn
