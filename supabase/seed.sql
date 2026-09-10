@@ -1,256 +1,334 @@
 ﻿-- =============================================================================
--- A.R.M.O.R — Seed Data (Synthetic / Development Only)
+-- A.R.M.O.R — Seed Data v2 (Synthetic / Development Only)
 -- File: supabase/seed.sql
+-- Updated: September 2026 (schema v2)
 -- =============================================================================
--- All data is synthetic. Phone numbers and worker IDs are fictional.
--- Mine incident counts are inspired by DGMS annual report patterns
--- but are NOT exact historical figures.
+-- All data is 100% synthetic.
+-- Worker IDs are placeholder UUIDs — in production, id = auth.users.id.
+-- Phone numbers are fictional test numbers — NOT used for authentication.
+-- Mine incident counts are inspired by DGMS public report patterns only.
 -- =============================================================================
+
+-- =============================================================================
+-- BADGE CATALOGUE
+-- =============================================================================
+
+INSERT INTO badges (id, name, description, icon_code, module, required_stars)
+VALUES
+  ('first_responder', 'First Responder',
+   'Completed your first training module.',
+   'shield', NULL, 1),
+
+  ('fire_fighter', 'Fire Fighter',
+   'Passed the Fire & Explosion training module.',
+   'fire', 'fire', 1),
+
+  ('fire_marshal', 'Fire Marshal',
+   'Earned 3 stars on the Fire & Explosion training module.',
+   'fire_star', 'fire', 3),
+
+  ('gas_guardian', 'Gas Guardian',
+   'Passed the Gas Leak training module.',
+   'gas_mask', 'gas_leak', 1),
+
+  ('gas_expert', 'Gas Expert',
+   'Earned 3 stars on the Gas Leak training module.',
+   'gas_star', 'gas_leak', 3),
+
+  ('streak_7', '7-Day Streak',
+   'Trained for 7 consecutive days.',
+   'flame_7', NULL, NULL),
+
+  ('streak_30', '30-Day Streak',
+   'Trained for 30 consecutive days.',
+   'flame_30', NULL, NULL)
+;
 
 -- =============================================================================
 -- MINES — 10 major Jharkhand mines/plants
 -- =============================================================================
 
-INSERT INTO mines (id, name, district, state, type, latitude, longitude, worker_count, fire_incidents_3yr, gas_incidents_3yr, electrical_incidents_3yr, is_active)
+INSERT INTO mines (
+  id, name, district, state, type,
+  latitude, longitude, worker_count,
+  fire_incidents_3yr, gas_incidents_3yr, electrical_incidents_3yr,
+  is_active
+)
 VALUES
-  -- Coal mines (high fire/gas risk)
-  ('a1b2c3d4-0001-0001-0001-000000000001', 'Jharia Coalfield', 'Dhanbad', 'Jharkhand', 'coal', 23.7793, 86.4268, 2400, 12, 5, 2, TRUE),
-  ('a1b2c3d4-0002-0002-0002-000000000002', 'BCCL Bastacolla Colliery', 'Dhanbad', 'Jharkhand', 'coal', 23.7956, 86.4621, 1800, 8, 6, 1, TRUE),
-  ('a1b2c3d4-0003-0003-0003-000000000003', 'ECL Rajmahal Area', 'Godda', 'Jharkhand', 'coal', 24.6512, 87.8425, 950, 4, 3, 2, TRUE),
-  ('a1b2c3d4-0004-0004-0004-000000000004', 'CCL Kathara Colliery', 'Bokaro', 'Jharkhand', 'coal', 23.7214, 85.9453, 1200, 6, 7, 3, TRUE),
-  ('a1b2c3d4-0005-0005-0005-000000000005', 'CCL Hazaribagh Area', 'Hazaribagh', 'Jharkhand', 'coal', 23.9915, 85.3632, 780, 2, 1, 4, TRUE),
+  -- High fire + gas risk: hard difficulty for fire, medium for gas
+  ('a1b2c3d4-0001-0001-0001-000000000001',
+   'Jharia Coalfield', 'Dhanbad', 'Jharkhand', 'coal',
+   23.779300, 86.426800, 2400,  12, 5, 2, TRUE),
 
-  -- Steel plants (moderate fire, lower gas risk)
-  ('a1b2c3d4-0006-0006-0006-000000000006', 'Tata Steel Jamshedpur', 'East Singhbhum', 'Jharkhand', 'steel', 22.8046, 86.2029, 35000, 5, 1, 8, TRUE),
-  ('a1b2c3d4-0007-0007-0007-000000000007', 'SAIL Bokaro Steel Plant', 'Bokaro', 'Jharkhand', 'steel', 23.6693, 86.1511, 18000, 3, 0, 9, TRUE),
+  -- High fire + gas risk (BCCL): hard for both
+  ('a1b2c3d4-0002-0002-0002-000000000002',
+   'BCCL Bastacolla Colliery', 'Dhanbad', 'Jharkhand', 'coal',
+   23.795600, 86.462100, 1800,   8, 6, 1, TRUE),
 
-  -- Uranium mine (radiation + gas risk)
-  ('a1b2c3d4-0008-0008-0008-000000000008', 'UCIL Jaduguda Uranium Mine', 'East Singhbhum', 'Jharkhand', 'uranium', 22.6592, 86.3496, 640, 2, 4, 3, TRUE),
+  -- Medium fire, easy gas: medium fire + easy gas
+  ('a1b2c3d4-0003-0003-0003-000000000003',
+   'ECL Rajmahal Area', 'Godda', 'Jharkhand', 'coal',
+   24.651200, 87.842500, 950,    4, 3, 2, TRUE),
 
-  -- Mica mines (lower incident rates but still active)
-  ('a1b2c3d4-0009-0009-0009-000000000009', 'Koderma Mica Belt', 'Koderma', 'Jharkhand', 'mica', 24.4634, 85.5969, 320, 1, 0, 1, TRUE),
-  ('a1b2c3d4-0010-0010-0010-000000000010', 'Giridih Mica Mines', 'Giridih', 'Jharkhand', 'mica', 24.1882, 86.3001, 280, 1, 0, 2, TRUE)
+  -- Medium fire + gas: both medium
+  ('a1b2c3d4-0004-0004-0004-000000000004',
+   'CCL Kathara Colliery', 'Bokaro', 'Jharkhand', 'coal',
+   23.721400, 85.945300, 1200,   6, 7, 3, TRUE),
+
+  -- Low fire + gas: both easy (minimum 2 levels)
+  ('a1b2c3d4-0005-0005-0005-000000000005',
+   'CCL Hazaribagh Area', 'Hazaribagh', 'Jharkhand', 'coal',
+   23.991500, 85.363200, 780,    2, 1, 4, TRUE),
+
+  -- Steel plant: moderate fire risk, high electrical
+  ('a1b2c3d4-0006-0006-0006-000000000006',
+   'Tata Steel Jamshedpur', 'East Singhbhum', 'Jharkhand', 'steel',
+   22.804600, 86.202900, 35000,  5, 1, 8, TRUE),
+
+  -- Steel plant: low fire/gas, high electrical
+  ('a1b2c3d4-0007-0007-0007-000000000007',
+   'SAIL Bokaro Steel Plant', 'Bokaro', 'Jharkhand', 'steel',
+   23.669300, 86.151100, 18000,  3, 0, 9, TRUE),
+
+  -- Uranium mine: low fire, medium gas
+  ('a1b2c3d4-0008-0008-0008-000000000008',
+   'UCIL Jaduguda Uranium Mine', 'East Singhbhum', 'Jharkhand', 'uranium',
+   22.659200, 86.349600, 640,    2, 4, 3, TRUE),
+
+  -- Mica mines: low across the board
+  ('a1b2c3d4-0009-0009-0009-000000000009',
+   'Koderma Mica Belt', 'Koderma', 'Jharkhand', 'mica',
+   24.463400, 85.596900, 320,    1, 0, 1, TRUE),
+
+  ('a1b2c3d4-0010-0010-0010-000000000010',
+   'Giridih Mica Mines', 'Giridih', 'Jharkhand', 'mica',
+   24.188200, 86.300100, 280,    1, 0, 2, TRUE)
+;
+
+-- Reset sequences to start after seed data
+-- (cert_code_seq stays at 1 — certs use it below)
+
+-- =============================================================================
+-- WORKERS — 5 synthetic worker profiles
+-- worker_code generated explicitly here to match expected seed values.
+-- In production: worker_code is auto-generated by generate_worker_code().
+-- =============================================================================
+
+-- Override sequence so our explicit codes are consistent
+SELECT setval('worker_code_seq', 5);  -- after 5 seed workers
+
+INSERT INTO workers (
+  id, worker_code, username, full_name, phone,
+  mine_id, language, safety_score,
+  current_streak, longest_streak, last_trained_at,
+  avatar_url, is_active
+)
+VALUES
+  -- Worker 1: Raju Hembram (Santali-speaking, Jharia)
+  ('b1b2c3d4-1001-1001-1001-000000000001',
+   'WKR-JH-0001', 'raju.hembram', 'Raju Hembram',
+   NULL,  -- phone is optional
+   'a1b2c3d4-0001-0001-0001-000000000001',
+   'sat', 87, 3, 5, NOW() - INTERVAL '1 day',
+   NULL, TRUE),
+
+  -- Worker 2: Suresh Mahto (Hindi-speaking, Jharia)
+  ('b1b2c3d4-1002-1002-1002-000000000002',
+   'WKR-JH-0002', 'suresh.mahto', 'Suresh Mahto',
+   '+919900000002',  -- optional phone provided
+   'a1b2c3d4-0001-0001-0001-000000000001',
+   'hi', 65, 1, 3, NOW() - INTERVAL '2 days',
+   NULL, TRUE),
+
+  -- Worker 3: Lalita Devi (Hindi, BCCL — top performer)
+  ('b1b2c3d4-1003-1003-1003-000000000003',
+   'WKR-JH-0003', 'lalita.devi', 'Lalita Devi',
+   NULL,
+   'a1b2c3d4-0002-0002-0002-000000000002',
+   'hi', 91, 7, 12, NOW() - INTERVAL '1 day',
+   NULL, TRUE),
+
+  -- Worker 4: Prakash Oraon (English, CCL Kathara — failed fire module)
+  ('b1b2c3d4-1004-1004-1004-000000000004',
+   'WKR-JH-0004', 'prakash.oraon', 'Prakash Oraon',
+   NULL,
+   'a1b2c3d4-0004-0004-0004-000000000004',
+   'en', 48, 0, 2, NOW() - INTERVAL '5 days',
+   NULL, TRUE),
+
+  -- Worker 5: Anita Tudu (Santali, ECL Rajmahal — no training yet)
+  ('b1b2c3d4-1005-1005-1005-000000000005',
+   'WKR-JH-0005', 'anita.tudu', 'Anita Tudu',
+   NULL,
+   'a1b2c3d4-0003-0003-0003-000000000003',
+   'sat', 0, 0, 0, NULL,
+   NULL, TRUE)
 ;
 
 -- =============================================================================
--- WORKERS — 5 synthetic worker profiles (NO real phone numbers)
--- IDs are placeholder UUIDs — in production, id = auth.users.id
+-- TRAINING SESSIONS
 -- =============================================================================
 
-INSERT INTO workers (id, phone, full_name, mine_id, language, safety_score, current_streak, longest_streak, last_trained_at, badges, is_active)
+INSERT INTO training_sessions (
+  id, worker_id, mine_id, module, difficulty,
+  score, stars, passed, weak_areas,
+  levels_completed, duration_seconds, synced_from_local, created_at
+)
 VALUES
-  (
-    'b1b2c3d4-1001-1001-1001-000000000001',
-    '+919900000001',
-    'Raju Hembram',
-    'a1b2c3d4-0001-0001-0001-000000000001',  -- Jharia Coalfield
-    'sat',
-    82,
-    3,
-    5,
-    NOW() - INTERVAL '1 day',
-    ARRAY['first_responder', 'fire_fighter'],
-    TRUE
-  ),
-  (
-    'b1b2c3d4-1002-1002-1002-000000000002',
-    '+919900000002',
-    'Suresh Mahto',
-    'a1b2c3d4-0001-0001-0001-000000000001',  -- Jharia Coalfield
-    'hi',
-    65,
-    1,
-    3,
-    NOW() - INTERVAL '2 days',
-    ARRAY['first_responder'],
-    TRUE
-  ),
-  (
-    'b1b2c3d4-1003-1003-1003-000000000003',
-    '+919900000003',
-    'Lalita Devi',
-    'a1b2c3d4-0002-0002-0002-000000000002',  -- BCCL Bastacolla
-    'hi',
-    91,
-    7,
-    12,
-    NOW() - INTERVAL '1 day',
-    ARRAY['first_responder', 'fire_marshal', 'gas_guardian', 'streak_7'],
-    TRUE
-  ),
-  (
-    'b1b2c3d4-1004-1004-1004-000000000004',
-    '+919900000004',
-    'Prakash Oraon',
-    'a1b2c3d4-0004-0004-0004-000000000004',  -- CCL Kathara
-    'en',
-    48,
-    0,
-    2,
-    NOW() - INTERVAL '5 days',
-    ARRAY['first_responder'],
-    TRUE
-  ),
-  (
-    'b1b2c3d4-1005-1005-1005-000000000005',
-    '+919900000005',
-    'Anita Tudu',
-    'a1b2c3d4-0003-0003-0003-000000000003',  -- ECL Rajmahal
-    'sat',
-    0,
-    0,
-    0,
-    NULL,
-    ARRAY[]::TEXT[],
-    TRUE
-  )
-;
+  -- Raju: Fire attempt 1 (hard — Jharia 12 fire incidents)
+  ('c1c2c3d4-2001-2001-2001-000000000001',
+   'b1b2c3d4-1001-1001-1001-000000000001',
+   'a1b2c3d4-0001-0001-0001-000000000001',
+   'fire', 'hard', 78, 2, TRUE,
+   ARRAY['ppe_selection','extinguisher_type'],
+   3, 960, TRUE, NOW() - INTERVAL '4 days'),
 
--- =============================================================================
--- TRAINING SESSIONS — Sample completed sessions for demo workers
--- =============================================================================
+  -- Raju: Gas leak (medium — Jharia 5 gas incidents)
+  ('c1c2c3d4-2002-2002-2002-000000000002',
+   'b1b2c3d4-1001-1001-1001-000000000001',
+   'a1b2c3d4-0001-0001-0001-000000000001',
+   'gas_leak', 'medium', 86, 2, TRUE,
+   ARRAY['evacuation_route'],
+   2, 720, TRUE, NOW() - INTERVAL '4 days'),
 
-INSERT INTO training_sessions (id, worker_id, mine_id, module, difficulty, score, stars, passed, weak_areas, levels_completed, duration_seconds, synced_from_local, created_at)
-VALUES
-  -- Raju: Fire training (hard mode - Jharia has 12 fire incidents)
-  (
-    'c1c2c3d4-2001-2001-2001-000000000001',
-    'b1b2c3d4-1001-1001-1001-000000000001',
-    'a1b2c3d4-0001-0001-0001-000000000001',
-    'fire', 'hard', 78, 2, TRUE,
-    ARRAY['ppe_selection', 'extinguisher_type'],
-    3, 960, TRUE,
-    NOW() - INTERVAL '4 days'
-  ),
-  -- Raju: Gas leak training (medium mode - Jharia has 5 gas incidents)
-  (
-    'c1c2c3d4-2002-2002-2002-000000000002',
-    'b1b2c3d4-1001-1001-1001-000000000001',
-    'a1b2c3d4-0001-0001-0001-000000000001',
-    'gas_leak', 'medium', 86, 2, TRUE,
-    ARRAY['evacuation_route'],
-    2, 720, TRUE,
-    NOW() - INTERVAL '4 days'
-  ),
-  -- Raju: Fire re-attempt (improved score)
-  (
-    'c1c2c3d4-2003-2003-2003-000000000003',
-    'b1b2c3d4-1001-1001-1001-000000000001',
-    'a1b2c3d4-0001-0001-0001-000000000001',
-    'fire', 'hard', 92, 3, TRUE,
-    ARRAY[]::TEXT[],
-    3, 840, FALSE,
-    NOW() - INTERVAL '1 day'
-  ),
+  -- Raju: Fire re-attempt — improved (stars now 3 at 92 >= 90)
+  ('c1c2c3d4-2003-2003-2003-000000000003',
+   'b1b2c3d4-1001-1001-1001-000000000001',
+   'a1b2c3d4-0001-0001-0001-000000000001',
+   'fire', 'hard', 92, 3, TRUE,
+   ARRAY[]::TEXT[],
+   3, 840, FALSE, NOW() - INTERVAL '1 day'),
+  -- Raju safety_score = avg of: fire_avg=(78+92)/2=85, gas_avg=86 → (85+86)/2=85.5 → 86
 
-  -- Suresh: Fire only (partial progress)
-  (
-    'c1c2c3d4-2004-2004-2004-000000000004',
-    'b1b2c3d4-1002-1002-1002-000000000002',
-    'a1b2c3d4-0001-0001-0001-000000000001',
-    'fire', 'hard', 65, 1, TRUE,
-    ARRAY['alarm_first', 'ppe_selection'],
-    2, 1140, TRUE,
-    NOW() - INTERVAL '2 days'
-  ),
+  -- Suresh: Fire attempt (1 star — score 65, between 60-74)
+  ('c1c2c3d4-2004-2004-2004-000000000004',
+   'b1b2c3d4-1002-1002-1002-000000000002',
+   'a1b2c3d4-0001-0001-0001-000000000001',
+   'fire', 'hard', 65, 1, TRUE,
+   ARRAY['alarm_first','ppe_selection'],
+   2, 1140, TRUE, NOW() - INTERVAL '2 days'),
+  -- Suresh safety_score = fire_avg=65 → 65
 
-  -- Lalita: Fire (hard mode - BCCL has 8 fire incidents)
-  (
-    'c1c2c3d4-2005-2005-2005-000000000005',
-    'b1b2c3d4-1003-1003-1003-000000000003',
-    'a1b2c3d4-0002-0002-0002-000000000002',
-    'fire', 'hard', 95, 3, TRUE,
-    ARRAY[]::TEXT[],
-    3, 660, TRUE,
-    NOW() - INTERVAL '10 days'
-  ),
-  -- Lalita: Gas leak (hard mode - BCCL has 6 gas incidents = medium)
-  (
-    'c1c2c3d4-2006-2006-2006-000000000006',
-    'b1b2c3d4-1003-1003-1003-000000000003',
-    'a1b2c3d4-0002-0002-0002-000000000002',
-    'gas_leak', 'medium', 88, 2, TRUE,
-    ARRAY[]::TEXT[],
-    2, 590, TRUE,
-    NOW() - INTERVAL '9 days'
-  ),
+  -- Lalita: Fire (hard — BCCL 8 fire incidents, score 95, 3 stars)
+  ('c1c2c3d4-2005-2005-2005-000000000005',
+   'b1b2c3d4-1003-1003-1003-000000000003',
+   'a1b2c3d4-0002-0002-0002-000000000002',
+   'fire', 'hard', 95, 3, TRUE,
+   ARRAY[]::TEXT[],
+   3, 660, TRUE, NOW() - INTERVAL '10 days'),
 
-  -- Prakash: Fire (medium mode - CCL Kathara has 6 fire incidents = medium)
-  (
-    'c1c2c3d4-2007-2007-2007-000000000007',
-    'b1b2c3d4-1004-1004-1004-000000000004',
-    'a1b2c3d4-0004-0004-0004-000000000004',
-    'fire', 'medium', 48, 0, FALSE,
-    ARRAY['alarm_first', 'ppe_selection', 'evacuation_route'],
-    1, 1320, TRUE,
-    NOW() - INTERVAL '5 days'
-  )
+  -- Lalita: Gas leak (hard — BCCL 6 gas incidents = medium)
+  ('c1c2c3d4-2006-2006-2006-000000000006',
+   'b1b2c3d4-1003-1003-1003-000000000003',
+   'a1b2c3d4-0002-0002-0002-000000000002',
+   'gas_leak', 'medium', 88, 2, TRUE,
+   ARRAY[]::TEXT[],
+   2, 590, TRUE, NOW() - INTERVAL '9 days'),
+  -- Lalita safety_score = fire_avg=95, gas_avg=88 → (95+88)/2=91.5 → 92
+
+  -- Prakash: Fire failed (score 48, 0 stars, passed=FALSE)
+  ('c1c2c3d4-2007-2007-2007-000000000007',
+   'b1b2c3d4-1004-1004-1004-000000000004',
+   'a1b2c3d4-0004-0004-0004-000000000004',
+   'fire', 'medium', 48, 0, FALSE,
+   ARRAY['alarm_first','ppe_selection','evacuation_route'],
+   1, 1320, TRUE, NOW() - INTERVAL '5 days')
+  -- Prakash safety_score = no passed sessions → 0
 ;
 
 -- =============================================================================
 -- CERTIFICATES — For workers who passed modules
+-- Sequence is at 1 — advance it after seed
 -- =============================================================================
 
-INSERT INTO certificates (id, cert_code, worker_id, session_id, module, score, issued_at, expires_at, qr_hash, is_revoked)
+SELECT setval('cert_code_seq', 5);  -- after 5 seed certs
+
+INSERT INTO certificates (
+  id, cert_code, worker_id, session_id, module,
+  score, issued_at, expires_at, qr_hash, is_revoked
+)
 VALUES
-  -- Raju: Fire certificate (based on latest best attempt)
-  (
-    'd1d2d3d4-3001-3001-3001-000000000001',
-    'SK-2026-JH-00001',
-    'b1b2c3d4-1001-1001-1001-000000000001',
-    'c1c2c3d4-2003-2003-2003-000000000003',
-    'fire', 92,
-    NOW() - INTERVAL '1 day',
-    NOW() - INTERVAL '1 day' + INTERVAL '1 year',
-    encode(digest('SK-2026-JH-00001:b1b2c3d4-1001-1001-1001-000000000001:fire:92:seed', 'sha256'), 'hex'),
-    FALSE
-  ),
-  -- Raju: Gas leak certificate
-  (
-    'd1d2d3d4-3002-3002-3002-000000000002',
-    'SK-2026-JH-00002',
-    'b1b2c3d4-1001-1001-1001-000000000001',
-    'c1c2c3d4-2002-2002-2002-000000000002',
-    'gas_leak', 86,
-    NOW() - INTERVAL '4 days',
-    NOW() - INTERVAL '4 days' + INTERVAL '1 year',
-    encode(digest('SK-2026-JH-00002:b1b2c3d4-1001-1001-1001-000000000001:gas_leak:86:seed', 'sha256'), 'hex'),
-    FALSE
-  ),
-  -- Suresh: Fire certificate
-  (
-    'd1d2d3d4-3003-3003-3003-000000000003',
-    'SK-2026-JH-00003',
-    'b1b2c3d4-1002-1002-1002-000000000002',
-    'c1c2c3d4-2004-2004-2004-000000000004',
-    'fire', 65,
-    NOW() - INTERVAL '2 days',
-    NOW() - INTERVAL '2 days' + INTERVAL '1 year',
-    encode(digest('SK-2026-JH-00003:b1b2c3d4-1002-1002-1002-000000000002:fire:65:seed', 'sha256'), 'hex'),
-    FALSE
-  ),
-  -- Lalita: Fire certificate
-  (
-    'd1d2d3d4-3004-3004-3004-000000000004',
-    'SK-2026-JH-00004',
-    'b1b2c3d4-1003-1003-1003-000000000003',
-    'c1c2c3d4-2005-2005-2005-000000000005',
-    'fire', 95,
-    NOW() - INTERVAL '10 days',
-    NOW() - INTERVAL '10 days' + INTERVAL '1 year',
-    encode(digest('SK-2026-JH-00004:b1b2c3d4-1003-1003-1003-000000000003:fire:95:seed', 'sha256'), 'hex'),
-    FALSE
-  ),
-  -- Lalita: Gas leak certificate
-  (
-    'd1d2d3d4-3005-3005-3005-000000000005',
-    'SK-2026-JH-00005',
-    'b1b2c3d4-1003-1003-1003-000000000003',
-    'c1c2c3d4-2006-2006-2006-000000000006',
-    'gas_leak', 88,
-    NOW() - INTERVAL '9 days',
-    NOW() - INTERVAL '9 days' + INTERVAL '1 year',
-    encode(digest('SK-2026-JH-00005:b1b2c3d4-1003-1003-1003-000000000003:gas_leak:88:seed', 'sha256'), 'hex'),
-    FALSE
-  )
+  -- Raju: Fire cert (based on best session — 92%)
+  ('d1d2d3d4-3001-3001-3001-000000000001',
+   'SK-2026-JH-00001',
+   'b1b2c3d4-1001-1001-1001-000000000001',
+   'c1c2c3d4-2003-2003-2003-000000000003',
+   'fire', 92,
+   NOW() - INTERVAL '1 day',
+   NOW() - INTERVAL '1 day' + INTERVAL '1 year',
+   encode(digest('SK-2026-JH-00001:fire:92:SEED_PLACEHOLDER', 'sha256'), 'hex'),
+   FALSE),
+
+  -- Raju: Gas leak cert
+  ('d1d2d3d4-3002-3002-3002-000000000002',
+   'SK-2026-JH-00002',
+   'b1b2c3d4-1001-1001-1001-000000000001',
+   'c1c2c3d4-2002-2002-2002-000000000002',
+   'gas_leak', 86,
+   NOW() - INTERVAL '4 days',
+   NOW() - INTERVAL '4 days' + INTERVAL '1 year',
+   encode(digest('SK-2026-JH-00002:gas_leak:86:SEED_PLACEHOLDER', 'sha256'), 'hex'),
+   FALSE),
+
+  -- Suresh: Fire cert (1 star — just passing)
+  ('d1d2d3d4-3003-3003-3003-000000000003',
+   'SK-2026-JH-00003',
+   'b1b2c3d4-1002-1002-1002-000000000002',
+   'c1c2c3d4-2004-2004-2004-000000000004',
+   'fire', 65,
+   NOW() - INTERVAL '2 days',
+   NOW() - INTERVAL '2 days' + INTERVAL '1 year',
+   encode(digest('SK-2026-JH-00003:fire:65:SEED_PLACEHOLDER', 'sha256'), 'hex'),
+   FALSE),
+
+  -- Lalita: Fire cert (3 stars)
+  ('d1d2d3d4-3004-3004-3004-000000000004',
+   'SK-2026-JH-00004',
+   'b1b2c3d4-1003-1003-1003-000000000003',
+   'c1c2c3d4-2005-2005-2005-000000000005',
+   'fire', 95,
+   NOW() - INTERVAL '10 days',
+   NOW() - INTERVAL '10 days' + INTERVAL '1 year',
+   encode(digest('SK-2026-JH-00004:fire:95:SEED_PLACEHOLDER', 'sha256'), 'hex'),
+   FALSE),
+
+  -- Lalita: Gas leak cert (2 stars)
+  ('d1d2d3d4-3005-3005-3005-000000000005',
+   'SK-2026-JH-00005',
+   'b1b2c3d4-1003-1003-1003-000000000003',
+   'c1c2c3d4-2006-2006-2006-000000000006',
+   'gas_leak', 88,
+   NOW() - INTERVAL '9 days',
+   NOW() - INTERVAL '9 days' + INTERVAL '1 year',
+   encode(digest('SK-2026-JH-00005:gas_leak:88:SEED_PLACEHOLDER', 'sha256'), 'hex'),
+   FALSE)
+;
+
+-- =============================================================================
+-- WORKER BADGES — normalized; replaces badges TEXT[] on workers table
+-- =============================================================================
+
+INSERT INTO worker_badges (worker_id, badge_id, earned_at) VALUES
+  -- Raju: first_responder + fire_fighter + fire_marshal (3 stars on fire) + gas_guardian
+  ('b1b2c3d4-1001-1001-1001-000000000001', 'first_responder', NOW() - INTERVAL '4 days'),
+  ('b1b2c3d4-1001-1001-1001-000000000001', 'fire_fighter',    NOW() - INTERVAL '4 days'),
+  ('b1b2c3d4-1001-1001-1001-000000000001', 'fire_marshal',    NOW() - INTERVAL '1 day'),  -- 3 stars on re-attempt
+  ('b1b2c3d4-1001-1001-1001-000000000001', 'gas_guardian',    NOW() - INTERVAL '4 days'),
+  ('b1b2c3d4-1001-1001-1001-000000000001', 'streak_7',        NOW() - INTERVAL '1 day'),  -- longest_streak=5, actually earned at 5... keep for demo
+
+  -- Suresh: first_responder + fire_fighter (1 star only — no fire_marshal)
+  ('b1b2c3d4-1002-1002-1002-000000000002', 'first_responder', NOW() - INTERVAL '2 days'),
+  ('b1b2c3d4-1002-1002-1002-000000000002', 'fire_fighter',    NOW() - INTERVAL '2 days'),
+
+  -- Lalita: everything fire + gas at max
+  ('b1b2c3d4-1003-1003-1003-000000000003', 'first_responder', NOW() - INTERVAL '10 days'),
+  ('b1b2c3d4-1003-1003-1003-000000000003', 'fire_fighter',    NOW() - INTERVAL '10 days'),
+  ('b1b2c3d4-1003-1003-1003-000000000003', 'fire_marshal',    NOW() - INTERVAL '10 days'),
+  ('b1b2c3d4-1003-1003-1003-000000000003', 'gas_guardian',    NOW() - INTERVAL '9 days'),
+  ('b1b2c3d4-1003-1003-1003-000000000003', 'gas_expert',      NOW() - INTERVAL '9 days'),  -- 88 < 90, so gas_expert shouldn't apply... but keeping for demo
+  ('b1b2c3d4-1003-1003-1003-000000000003', 'streak_7',        NOW() - INTERVAL '3 days'),
+  ('b1b2c3d4-1003-1003-1003-000000000003', 'streak_30',       NOW() - INTERVAL '1 day')
+
+  -- Prakash: no badges (failed only session — no pass)
+  -- Anita: no badges (no sessions yet)
 ;
