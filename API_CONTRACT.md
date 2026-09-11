@@ -190,7 +190,7 @@ Direct updates by workers to `public.workers` are governed by RLS policy `worker
 - Any attempt to alter protected fields raises exception: `IMMUTABLE_FIELD`.
 
 ### 3.7 Training Session Sync & Certificate Issuance
-Workers sync training attempts either in real time or in batches from Hive local storage when connectivity is restored.
+The backend provides idempotent training session synchronization via `local_session_id`. Training attempts can be synced in real time or when connectivity is restored. *(Note: The client-side offline queue/storage implementation is deferred to Phase 8).*
 
 - **RPC Endpoint**: `POST /rest/v1/rpc/sync_training_session`
 - **Edge Function Endpoint**: `POST /functions/v1/sync-session`
@@ -208,7 +208,7 @@ Workers sync training attempts either in real time or in batches from Hive local
     "p_weak_areas": ["extinguisher_selection"],
     "p_levels_completed": 3,
     "p_duration_seconds": 540,
-    "p_local_session_id": "hive-uuid-987162-ab3",
+    "p_local_session_id": "loc-sess-987162-ab3",
     "p_synced_from_local": true,
     "p_actions": [
       {
@@ -663,7 +663,7 @@ If a worker hasn't selected a mine yet and queries `my_mine` or `my_district`, r
 | `weak_areas` | text[] | YES | Tags of weak areas |
 | `levels_completed` | integer | NO | Levels finished in this session |
 | `duration_seconds` | integer | YES | Total session time |
-| `synced_from_local` | boolean | NO | TRUE if synced from Hive |
+| `synced_from_local` | boolean | NO | TRUE if synced from local/offline storage |
 | `local_session_id` | text | YES | Client dedup ID |
 | `created_at` | timestamptz | NO | |
 
