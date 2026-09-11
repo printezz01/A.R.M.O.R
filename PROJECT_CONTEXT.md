@@ -1,4 +1,4 @@
-﻿# A.R.M.O.R — Project Context
+# A.R.M.O.R — Project Context
 
 **A**ugmented **R**eality **M**ine **O**perations & **R**escue
 
@@ -35,7 +35,7 @@ A.R.M.O.R. is a **mobile AR-based safety training application** targeting mine w
 - **Cloud Sync** - syncs to Supabase when WiFi is available
 - **Gamification** - safety score (0-100), streak counter, normalized badge system, star ratings
 - **Supervisor Web Dashboard** - React + TypeScript, compliance reports, PDF export
-- **Push Notifications** - spaced repetition reminders via FCM + Supabase Edge Functions
+- **In-App & Realtime Notifications** - live emergency drill alerts via Supabase Realtime and spaced-repetition / certificate-expiry reminders synchronized on reconnect
 
 ---
 
@@ -45,9 +45,14 @@ A.R.M.O.R. is a **mobile AR-based safety training application** targeting mine w
 
 - Workers log in with a username and password — no phone or OTP required.
 - Supervisors log in with a username and password.
+- Deterministic username normalization: `username.trim().toLowerCase()` with regex `^[a-z0-9._-]{3,30}$`.
+- Deterministic Supabase Auth internal mapping: `<normalized_username>@armor.internal`.
 - Phone is **optional contact data only** — stored on the profile, not used for login.
-- Worker accounts are provisioned server-side (Phase 2) after registration.
-- Each user in Supabase Auth (`auth.users`) maps 1:1 to a row in either `workers` or `supervisors`.
+- Worker accounts are provisioned server-side via `handle_new_auth_user()` trigger on `auth.users` upon signup.
+- Registration creates workers with `mine_id = NULL`, `safety_score = 0`, and sequential `worker_code` (`WKR-JH-XXXX`).
+- Mine selection is authenticated and performed post-registration via `set_worker_mine(uuid)`.
+- Authoritative roles are resolved from backend tables (`supervisors` vs `workers`), never from client input.
+- System fields (`safety_score`, `worker_code`, `username`, streaks) are protected against client mutation via `protect_worker_fields()` trigger.
 
 > Phone OTP auth was considered and rejected. The locked decision is username/password.
 
@@ -74,13 +79,23 @@ A.R.M.O.R/
 ├── .env.example
 ├── backend/
 │   ├── functions/
-│   │   └── _shared/       (cors.ts, errors.ts)
+│   │   ├── _shared/       (cors.ts, errors.ts, auth.ts)
+│   │   └── sync-session/  (index.ts)
 │   ├── scripts/
+│   │   ├── test_phase2_rls.sql
+│   │   ├── test_phase3_sync_certs.sql
+│   │   ├── test_phase4_supervisor_dashboard.sql
+│   │   └── test_phase5_notifications.sql
 │   └── README.md
 └── supabase/
     ├── config.toml
     ├── migrations/
-    │   └── 00000000000000_init.sql
+    │   ├── 00000000000000_init.sql
+    │   ├── 00000000000001_auth_and_worker_api.sql
+    │   ├── 00000000000002_training_and_certs.sql
+    │   ├── 00000000000003_cert_security_hardening.sql
+    │   ├── 00000000000004_supervisor_dashboard.sql
+    │   └── 00000000000005_notifications_and_spaced_repetition.sql
     └── seed.sql
 ```
 
@@ -93,13 +108,13 @@ A.R.M.O.R/
 | Mobile App | Flutter (Dart), Android-only, ARCore |
 | Offline DB | Hive (NoSQL, on-device) |
 | Cloud DB | Supabase (PostgreSQL + Auth + Storage + RLS) |
-| Auth | Supabase username/password (Email auth with username as email is NOT used; custom username field) |
+| Auth | Supabase username/password (Internal email mapping: `<username>@armor.internal`) |
 | AR | ARCore via ar_flutter_plugin |
 | Voice / TTS | Bhashini API (pre-generated MP3 assets, bundled offline) |
 | Map | Custom SVG (Jharkhand), flutter_svg |
 | State Mgmt | Riverpod (flutter_riverpod) |
 | QR Certs | qr_flutter + dart_pdf |
-| Push Notif | Firebase Cloud Messaging (FCM) - Phase 5 |
+| In-App & Realtime Alerts | Supabase Realtime + PostgreSQL Notification Queue |
 | Web Dashboard | React + TypeScript + shadcn/ui + Recharts |
 | Web Hosting | Vercel |
 | Monorepo | GitHub (printezz01/A.R.M.O.R) |
@@ -153,11 +168,13 @@ The `workers` table does NOT contain a badges array. All badge queries go throug
 
 ---
 
-## 12. Certificate Verification
+## 12. Certificate Verification (Security Hardened)
 
-- **Online:** Call `verify_certificate(cert_code)` SECURITY DEFINER function (anon-callable). Returns safe public fields only — no internal UUIDs, no qr_hash.
-- **Offline:** Flutter app re-computes SHA-256 hash locally and compares against the embedded hash in the QR code data.
-- The `certificates` table has NO anon-readable RLS policy. The function is the only public access path.
+- **Authoritative Issuance:** Certificates are issued exclusively by the Supabase backend upon passing a training module.
+- **Zero Client Secrets:** No symmetric signing secrets exist in Flutter, React, Hive, or frontend code.
+- **QR Code Content:** Physical and in-app QR codes encode **public verification data only** (`cert_code` and environment-configurable verification URL e.g. `<CERT_VERIFY_BASE_URL>?code=SK-2026-JH-00001`).
+- **Online Verification:** Call `verify_certificate(cert_code)` SECURITY DEFINER function or the `verify-certificate` Edge Function (anon-callable). Returns safe public verification data (worker name, worker code, mine name, district, module, score, validity, status) without exposing internal UUIDs, phone numbers, or database secrets.
+- **Integrity Checksum:** The database `qr_hash` is an internal backend tamper-evident checksum.
 
 ---
 
@@ -173,16 +190,17 @@ The `workers` table does NOT contain a badges array. All badge queries go throug
 
 ## 14. Phase Roadmap
 
-| Phase | Version | Scope |
-|---|---|---|
-| Phase 1 (done) | 0.1.0 | Repo structure, schema, RLS, seed data, views/functions |
-| Phase 2 | 0.2.0 | Supabase Auth (username/password), worker registration, mine API |
-| Phase 3 | 0.3.0 | Training session sync API, certificate generation + QR signing |
-| Phase 4 | 0.4.0 | Supervisor dashboard API, compliance report generation |
-| Phase 5 | 0.5.0 | FCM push notifications, pg_cron spaced repetition triggers |
-| Phase 6 | 0.6.0 | Edge Functions (cert verify, leaderboard) |
-| Phase 7 | 1.0.0 | Production hardening, rate limiting, monitoring |
+| Phase | Version | Scope | Status |
+|---|---|---|---|
+| Phase 1 | 0.1.0 | Repo structure, schema v2, RLS, seed data, views/functions | ✅ Complete |
+| Phase 2 | 0.2.0 | Supabase Auth (username/password), worker registration, mine API | ✅ Complete |
+| Phase 3 | 0.3.0 | Training session sync API, certificate generation + QR signing | ✅ Complete |
+| Phase 4 | 0.4.0 | Supervisor dashboard API, compliance report generation | ✅ Complete |
+| Phase 5 | 0.5.0 | Supabase notifications, Realtime alerts, spaced repetition | ✅ Complete |
+| Phase 6 | 0.6.0 | Edge Functions (cert verify, leaderboard), multi-tier rankings | ✅ Complete |
+| Phase 7 | 1.0.0 | Production hardening, security gateway, indexes, audit | ✅ Complete |
+| Phase 8 | 1.1.0 | Flutter Hive offline-first client layer (Deferred) | Pending |
 
 ---
 
-*Last updated: Phase 1 v2 revision — September 2026*
+*Last updated: Phase 7 completion — September 2026*

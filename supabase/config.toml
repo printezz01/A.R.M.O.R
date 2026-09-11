@@ -1,4 +1,4 @@
-﻿# Supabase CLI Project Configuration
+# Supabase CLI Project Configuration
 # Linked to hosted project: ampqcpxpshaiiquqbmmn.supabase.co
 # DO NOT use `supabase start` — we use the hosted project only.
 
@@ -10,9 +10,9 @@ id = "ampqcpxpshaiiquqbmmn"
 # https://ampqcpxpshaiiquqbmmn.supabase.co/rest/v1/
 
 [auth]
-# Phone OTP auth is configured in the Supabase dashboard.
-# Workers authenticate via phone number + SMS OTP.
-# No email auth required.
+# Auth model: Username + Password (no phone OTP / SMS / email OTP).
+# Workers and supervisors authenticate via username and password.
+# Mapped internally to <normalized_username>@armor.internal.
 site_url = "https://armor-app.example.com"
 
 [storage]
@@ -21,5 +21,5 @@ site_url = "https://armor-app.example.com"
 # - avatars (public) — worker profile photos
 
 [functions]
-# Edge Functions are in backend/functions/
+# Edge Functions are in supabase/functions/
 # Deploy with: supabase functions deploy <name> --project-ref ampqcpxpshaiiquqbmmn
